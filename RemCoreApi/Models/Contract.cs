@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace RemCoreApi.Models;
+namespace REM.Core.Api.Models;
 
-[Table("CONTRACTS_CONTRACT", Schema = "DEV_RAY2__REM")]
+[Table("CONTRACTS_CONTRACT", Schema = "PMPR_929__REM")]
 [Index("Contractedpartyid", Name = "IDX_CONTRACT_CONTRACTEDPARTY")]
 [Index("Currencyid", Name = "IDX_CONTRACT_CURRENCY")]
 [Index("Contracttypeid", Name = "IDX_CONTRACT_TYPE")]

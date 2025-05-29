@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Oracle.EntityFrameworkCore.Extensions;
-using RemCoreApi.Data;
-using RemCoreApi.Services;
+using REM.Core.Api.Data;
+using REM.Core.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

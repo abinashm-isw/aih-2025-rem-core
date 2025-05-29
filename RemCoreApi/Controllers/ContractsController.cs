@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using RemCoreApi.DTOs;
-using RemCoreApi.Services;
+using REM.Core.Api.DTOs;
+using REM.Core.Api.Services;
 
-namespace RemCoreApi.Controllers;
+namespace REM.Core.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

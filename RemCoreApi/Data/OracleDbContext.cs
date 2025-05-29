@@ -1,22 +1,33 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RemCoreApi.Models;
+using REM.Core.Api.Models;
 
-namespace RemCoreApi.Data;
+namespace REM.Core.Api.Data;
 
 public class OracleDbContext : DbContext
-{
+{    
     public OracleDbContext(DbContextOptions<OracleDbContext> options) : base(options)
     {
     }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        
+        // Configure Oracle to avoid boolean type mapping conflicts
+        optionsBuilder.EnableSensitiveDataLogging(false);
+    }
+
     public DbSet<Contract> Contracts { get; set; }
-    public DbSet<Contact> Contacts { get; set; }    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public DbSet<Contact> Contacts { get; set; }    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         
         // Configure Oracle-specific settings
-        modelBuilder.HasDefaultSchema("PMPR_929__REM");        // Configure Contract entity
+        modelBuilder.HasDefaultSchema("DEV_RAY2__REM");
+
+        // Configure Contract entity
         modelBuilder.Entity<Contract>(entity =>
         {
             entity.ToTable("CONTRACTS_CONTRACT", "DEV_RAY2__REM");
@@ -29,28 +40,28 @@ public class OracleDbContext : DbContext
             entity.HasIndex(e => e.Vendorid, "IDX_CONTRACT_VENDOR");
             entity.HasIndex(e => e.Entityid, "UQ_CONTRACT_ENTITYID").IsUnique();
             
-            // Configure NUMBER(1) fields as integers (no boolean conversion to avoid Oracle type mapping issues)
+            // Configure NUMBER(1) fields as integers - explicitly prevent boolean type mapping
             entity.Property(e => e.Isarchived)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("ISARCHIVED");
             entity.Property(e => e.Isbroken)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("ISBROKEN");
             entity.Property(e => e.Isinholdover)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("ISINHOLDOVER");
             entity.Property(e => e.Ispartialbuilding)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("ISPARTIALBUILDING");
             entity.Property(e => e.Isreceivable)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("ISRECEIVABLE");
             entity.Property(e => e.LeaseaccountingEoltakeownership)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("LEASEACCOUNTING_EOLTAKEOWNERSHIP");
             entity.Property(e => e.LeaseaccountingForcereview)
                 .HasColumnType("NUMBER(1)")
-                .HasConversion<int?>();
+                .HasColumnName("LEASEACCOUNTING_FORCEREVIEW");
             
             // Configure other numeric properties
             entity.Property(e => e.LeaseaccountingManualoverride)
@@ -83,10 +94,11 @@ public class OracleDbContext : DbContext
             // Configure large text properties
             entity.Property(e => e.Notes)
                 .HasColumnType("NCLOB");
-        });        // Configure Contact entity
+        });        
+        // Configure Contact entity
         modelBuilder.Entity<Contact>(entity =>
         {
-            entity.ToTable("CONTACTS_CONTACTS", "PMPR_929__REM");
+            entity.ToTable("CONTACTS_CONTACTS", "DEV_RAY2__REM");
             entity.HasKey(e => e.Id);
 
             // Configure large text properties

@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace RemCoreApi.Models;
+namespace REM.Core.Api.Models;
 
-[Table("CONTACTS_CONTACTS", Schema = "DEV_RAY2__REM")]
+[Table("CONTACTS_CONTACTS", Schema = "PMPR_929__REM")]
 public partial class Contact
 {
     [Key]

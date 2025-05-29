@@ -1,7 +1,7 @@
-using RemCoreApi.DTOs;
-using RemCoreApi.Models;
+using REM.Core.Api.DTOs;
+using REM.Core.Api.Models;
 
-namespace RemCoreApi.Services;
+namespace REM.Core.Api.Services;
 
 public interface IContractService
 {

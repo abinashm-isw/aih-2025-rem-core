@@ -1,4 +1,4 @@
-namespace RemCoreApi.DTOs;
+namespace REM.Core.Api.DTOs;
 
 public class ContractDto
 {

@@ -4,7 +4,7 @@
 
 The REM (Real Estate Management) Core API is a RESTful web service built with ASP.NET Core 8.0 that provides contract management functionality for real estate operations. The API uses Oracle Database for data persistence and follows standard REST conventions.
 
-**Base URL:** `https://localhost:5001` (Development)  
+**Base URL:** `http://localhost:5180` (Development)  
 **API Version:** v1  
 **Database:** Oracle Database  
 
@@ -449,11 +449,20 @@ The API uses the following Oracle database schema:
 - **Main Table:** `CONTRACTS_CONTRACT`
 
 ### Boolean Handling
-The API handles Oracle's NUMBER(1) boolean fields by converting between:
-- Database: `1` (true) / `0` (false) / `NULL`
+The API handles Oracle's NUMBER(1) boolean fields with special consideration for Entity Framework Core compatibility:
+- Database: `1` (true) / `0` (false) / `NULL` stored as Oracle NUMBER(1) fields
 - API: `true` / `false` / `null`
 
-This conversion is handled automatically in the service layer mapping methods.
+**Technical Implementation:**
+- Boolean fields are mapped as integers in Entity Framework to avoid Oracle EF Core casting issues
+- Raw SQL queries are used for complex operations to bypass problematic boolean type mapping
+- The `AsNoTracking()` method is used for read-only operations to improve performance
+- Type conversion is handled automatically in the service layer mapping methods
+
+**Known Oracle EF Core Issues:**
+- Oracle EF Core has limitations with boolean literal casting in LINQ queries
+- NUMBER(1) fields require special handling to prevent SQL generation errors
+- Raw SQL queries provide better compatibility for complex boolean filtering operations
 
 ## Future Enhancements
 

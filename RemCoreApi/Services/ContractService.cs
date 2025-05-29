@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using RemCoreApi.Data;
-using RemCoreApi.DTOs;
-using RemCoreApi.Models;
+using REM.Core.Api.Data;
+using REM.Core.Api.DTOs;
+using REM.Core.Api.Models;
 
-namespace RemCoreApi.Services;
+namespace REM.Core.Api.Services;
 
 public class ContractService : IContractService
 {
@@ -18,11 +18,16 @@ public class ContractService : IContractService
     {
         try
         {
+            // Use raw SQL to avoid Oracle boolean type mapping issues
+            var sql = @"
+                SELECT * FROM ""DEV_RAY2__REM"".""CONTRACTS_CONTRACT"" 
+                WHERE (""ISARCHIVED"" IS NULL OR ""ISARCHIVED"" = 0)
+                ORDER BY ""ID"" DESC
+                FETCH FIRST 1000 ROWS ONLY";
+            
             var contracts = await _context.Contracts
-                .Where(c => c.Isarchived == null || c.Isarchived == 0) // Exclude archived contracts (0 = false, 1 = true)
+                .FromSqlRaw(sql)
                 .AsNoTracking()
-                .OrderByDescending(c => c.Id)
-                .Take(1000) // Limit to 1000 records for performance
                 .ToListAsync();
 
             return contracts.Select(MapToDto);
@@ -32,13 +37,12 @@ public class ContractService : IContractService
             _logger.LogError(ex, "Error retrieving all contracts");
             throw;
         }
-    }
-
-    public async Task<ContractDto?> GetContractByIdAsync(int id)
+    }public async Task<ContractDto?> GetContractByIdAsync(int id)
     {
         try
         {
             var contract = await _context.Contracts
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             return contract != null ? MapToDto(contract) : null;
@@ -137,32 +141,48 @@ public class ContractService : IContractService
     }    public async Task<IEnumerable<ContractDto>> SearchContractsAsync(string? description, string? status, int? vendorId, int? contractTypeId)
     {        try
         {
-            var query = _context.Contracts
-                .Where(c => c.Isarchived == null || c.Isarchived == 0); // Oracle-compatible integer comparison (0 = false, 1 = true)
+            // Build dynamic SQL to avoid Oracle boolean type mapping issues
+            var whereConditions = new List<string> { "(\"ISARCHIVED\" IS NULL OR \"ISARCHIVED\" = 0)" };
+            var parameters = new List<object>();
+            var paramIndex = 0;
 
             if (!string.IsNullOrEmpty(description))
             {
-                query = query.Where(c => c.Description != null && c.Description.Contains(description));
+                whereConditions.Add($"\"DESCRIPTION\" LIKE {{{paramIndex}}}");
+                parameters.Add($"%{description}%");
+                paramIndex++;
             }
 
             if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(c => c.Status == status);
+                whereConditions.Add($"\"STATUS\" = {{{paramIndex}}}");
+                parameters.Add(status);
+                paramIndex++;
             }
 
             if (vendorId.HasValue)
             {
-                query = query.Where(c => c.Vendorid == vendorId);
+                whereConditions.Add($"\"VENDORID\" = {{{paramIndex}}}");
+                parameters.Add(vendorId.Value);
+                paramIndex++;
             }
 
             if (contractTypeId.HasValue)
             {
-                query = query.Where(c => c.Contracttypeid == contractTypeId);
+                whereConditions.Add($"\"CONTRACTTYPEID\" = {{{paramIndex}}}");
+                parameters.Add(contractTypeId.Value);
+                paramIndex++;
             }
 
-            var contracts = await query
-                .OrderByDescending(c => c.Id)
-                .Take(500) // Limit search results
+            var sql = $@"
+                SELECT * FROM ""DEV_RAY2__REM"".""CONTRACTS_CONTRACT"" 
+                WHERE {string.Join(" AND ", whereConditions)}
+                ORDER BY ""ID"" DESC
+                FETCH FIRST 500 ROWS ONLY";
+
+            var contracts = await _context.Contracts
+                .FromSqlRaw(sql, parameters.ToArray())
+                .AsNoTracking()
                 .ToListAsync();
 
             return contracts.Select(MapToDto);
@@ -172,7 +192,7 @@ public class ContractService : IContractService
             _logger.LogError(ex, "Error searching contracts");
             throw;
         }
-    }    private static ContractDto MapToDto(Contract contract)
+    }private static ContractDto MapToDto(Contract contract)
     {
         return new ContractDto
         {
